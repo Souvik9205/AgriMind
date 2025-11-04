@@ -1,12 +1,11 @@
 {
-  "name": "AgriMind",
+  "name": "agrimind",
   "private": true,
   "scripts": {
+    "setup-db": "docker compose -f infra/compose.yml up -d",
+    "dev": "turbo run dev --parallel",
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "lint": "turbo run lint"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
