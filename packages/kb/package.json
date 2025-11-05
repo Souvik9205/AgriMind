@@ -1,0 +1,26 @@
+{
+  "name": "@agrimind/kb",
+  "version": "1.0.0",
+  "description": "Knowledge Base processor for West Bengal agricultural data",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "process": "/Users/souvik/Desktop/AgriMind/.venv/bin/python src/process.py",
+    "clean": "/Users/souvik/Desktop/AgriMind/.venv/bin/python src/process.py --clean",
+    "dev": "/Users/souvik/Desktop/AgriMind/.venv/bin/python src/process.py --clean"
+  },
+  "dependencies": {
+    "pandas": ">=1.5.0",
+    "PyPDF2": ">=3.0.0",
+    "numpy": ">=1.24.0",
+    "python-dateutil": ">=2.8.0"
+  },
+  "keywords": [
+    "agriculture",
+    "west-bengal",
+    "knowledge-base",
+    "data-processing"
+  ],
+  "author": "AgriMind Team",
+  "license": "MIT"
+}

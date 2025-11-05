@@ -1,0 +1,32 @@
+{
+  "name": "agrimind-rag",
+  "version": "1.0.0",
+  "description": "RAG (Retrieval-Augmented Generation) system for AgriMind agricultural knowledge base",
+  "main": "rag_system.py",
+  "scripts": {
+    "setup": "python setup_db.py",
+    "load-kb": "python load_knowledge_base.py",
+    "demo": "python rag_system.py",
+    "cli": "python cli.py",
+    "health": "python cli.py --health-check",
+    "stats": "python cli.py --stats"
+  },
+  "keywords": [
+    "agriculture",
+    "rag",
+    "llm",
+    "vector-database",
+    "west-bengal",
+    "farming",
+    "market-data"
+  ],
+  "author": "AgriMind Team",
+  "license": "MIT",
+  "dependencies": {
+    "python": ">=3.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "../../"
+  }
+}
