@@ -3,11 +3,14 @@
   "private": true,
   "scripts": {
     "setup-db": "docker compose -f infra/compose.yml up -d",
+    "setup-full": "docker compose -f infra/compose.yml up -d --build",
     "dev": "turbo run dev --parallel",
+    "dev:api": "cd apps/api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "detect-disease": "cd apps/ml-inference && /Users/souvik/Desktop/AgriMind/.venv/bin/python detect.py",
-    "ask-agrimind": "cd apps/rag-script && /Users/souvik/Desktop/AgriMind/.venv/bin/python cli.py"
+    "ask-agrimind": "cd apps/rag-script && /Users/souvik/Desktop/AgriMind/.venv/bin/python cli.py",
+    "test:api": "cd apps/api && python test_api.py"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

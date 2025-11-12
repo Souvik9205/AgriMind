@@ -24,7 +24,7 @@ class DocumentRetriever:
         self.vector_store = vector_store
         self.embedding_generator = embedding_generator
         self.top_k = int(os.getenv('TOP_K_RESULTS', '5'))
-        self.similarity_threshold = float(os.getenv('SIMILARITY_THRESHOLD', '0.7'))
+        self.similarity_threshold = float(os.getenv('SIMILARITY_THRESHOLD', '0.5'))  # Lowered from 0.7 to 0.5
     
     def retrieve_documents(self, query: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Retrieve relevant documents for a query"""

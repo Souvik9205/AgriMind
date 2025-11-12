@@ -33,32 +33,40 @@ class LLMClient:
             raise ValueError("GEMINI_API_KEY environment variable is required")
         
         self.max_context_length = int(os.getenv('MAX_CONTEXT_LENGTH', '4000'))
-        self.model_name = "gemini-2.0-flash-exp"
+        self.model_name = "gemini-2.5-flash"
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name)
         
         # System prompt for agricultural domain
-        self.system_prompt = """You are AgriMind, an expert agricultural assistant specializing in West Bengal agriculture and farming practices. You have access to a comprehensive knowledge base including:
+        self.system_prompt = """You are AgriMind, an expert agricultural assistant specializing in West Bengal and Indian agriculture. You are deeply knowledgeable about:
 
-- ICAR (Indian Council of Agricultural Research) reports and advisories
-- West Bengal market data and commodity prices
-- Kharif season crop recommendations
-- Weather and climate information for the region
-- Farming best practices and techniques
+🌾 WEST BENGAL AGRICULTURE:
+- Sub-tropical monsoon climate with high humidity (75-85%)
+- Alluvial soil in Gangetic plains, laterite in western districts
+- Three cropping seasons: Kharif (June-Nov), Rabi (Nov-Apr), Zaid (Apr-Jun)
+- Major crops: Rice (aman, aus, boro varieties), jute, tea, sugarcane, potato
+- Key districts: Hooghly, Burdwan, Nadia (rice belt), Cooch Behar (jute), Darjeeling (tea)
+- Traditional practices: SRI method for rice, organic farming in hills
 
-Your role is to provide accurate, helpful, and contextually relevant information about agriculture in West Bengal. When answering questions:
+🇮🇳 INDIAN AGRICULTURAL CONTEXT:
+- ICAR recommendations and government schemes (PM-KISAN, soil health cards)
+- MSP (Minimum Support Price) for major crops
+- Weather patterns: Southwest monsoon (June-Sep), Northeast monsoon (Oct-Dec)
+- Regional variations: Eastern India's high rainfall (1200-2000mm annually)
+- Market systems: APMC mandis, e-NAM platform, FPOs (Farmer Producer Organizations)
 
-1. Base your responses on the provided context from the knowledge base
-2. Be specific about crops, varieties, and practices suitable for West Bengal
-3. Include relevant market information when discussing crops
-4. Consider seasonal factors (Kharif, Rabi) in your recommendations
-5. Provide practical, actionable advice for farmers
-6. Always cite your sources and mention if information is specific to certain districts or regions
-7. If the context doesn't contain sufficient information to answer the question, say so clearly
+🎯 YOUR EXPERTISE FOCUS:
+1. Provide Bengal-specific crop varieties and cultivation timing
+2. Consider local soil types, rainfall patterns, and temperature ranges
+3. Reference nearby districts for comparative practices
+4. Include traditional Bengali farming wisdom alongside modern techniques
+5. Mention relevant government schemes and subsidies available in West Bengal
+6. Consider local market preferences and cultural food habits
+7. Address common regional challenges: flood management, pest issues, soil salinity
 
-Remember to be helpful, accurate, and farmer-focused in your responses."""
+Always contextualize advice for West Bengal's unique agro-climatic conditions and Indian agricultural policies."""
 
     def generate_response(self, query: str, context_documents: List[Dict[str, Any]]) -> RAGResponse:
         """Generate a response using the LLM with retrieved context"""
@@ -174,6 +182,138 @@ ANSWER:"""
         
         return confidence
     
+    def is_agriculture_related(self, query: str) -> bool:
+        """Check if a query is related to agriculture, farming, or crops"""
+        agriculture_keywords = [
+            # Core agriculture terms
+            'crop', 'crops', 'farming', 'farm', 'farmer', 'farmers', 'agriculture', 'agricultural',
+            'plant', 'plants', 'grow', 'growing', 'cultivation', 'cultivate', 'harvest', 'harvesting', 'yield',
+            
+            # Specific crops
+            'rice', 'paddy', 'wheat', 'maize', 'corn', 'sugarcane', 'jute', 'potato', 'potatoes',
+            'vegetables', 'tomato', 'onion', 'brinjal', 'cabbage', 'cauliflower', 'peas', 'beans',
+            'mustard', 'sesame', 'groundnut', 'sunflower', 'coconut', 'banana', 'mango',
+            
+            # Farming inputs and practices
+            'fertilizer', 'fertiliser', 'manure', 'compost', 'pesticide', 'insecticide', 'herbicide',
+            'irrigation', 'water', 'soil', 'seed', 'seeds', 'nursery', 'transplant', 'sowing',
+            
+            # Seasons and timing
+            'kharif', 'rabi', 'zaid', 'season', 'seasonal', 'monsoon', 'weather', 'rainfall', 'climate',
+            
+            # Market and economics
+            'market', 'price', 'prices', 'selling', 'buying', 'mandi', 'procurement', 'subsidy',
+            
+            # Regional terms
+            'west bengal', 'bengal', 'kolkata', 'calcutta', 'wb', 'icar', 'advisory', 'agro',
+            'district', 'village', 'rural', 'krishi', 'kisan',
+            
+            # Problems and diseases
+            'disease', 'pest', 'insect', 'fungus', 'blight', 'wilt', 'rot', 'damage', 'loss',
+            
+            # Technology and methods
+            'organic', 'hybrid', 'variety', 'breed', 'technique', 'method', 'technology', 'innovation'
+        ]
+        
+        query_lower = query.lower()
+        
+        # Check for direct keyword matches
+        keyword_match = any(keyword in query_lower for keyword in agriculture_keywords)
+        
+        # Check for agriculture-related phrases
+        agriculture_phrases = [
+            'how to grow', 'when to plant', 'best time', 'crop rotation', 'soil preparation',
+            'pest control', 'disease management', 'water management', 'nutrient management',
+            'market rate', 'farming tips', 'agricultural advice', 'cultivation practices'
+        ]
+        
+        phrase_match = any(phrase in query_lower for phrase in agriculture_phrases)
+        
+        return keyword_match or phrase_match
+
+    def generate_fallback_response(self, query: str) -> RAGResponse:
+        """Generate response using LLM's general knowledge when KB fails"""
+        try:
+            fallback_prompt = f"""You are AgriMind, an expert agricultural assistant specializing in West Bengal and Indian agriculture. 
+
+The user has asked: "{query}"
+
+While I don't have specific data from our knowledge base for this question, please provide helpful agricultural guidance based on your knowledge of:
+
+� WEST BENGAL AGRICULTURE:
+- Sub-tropical monsoon climate with distinct seasons (Kharif, Rabi, Zaid)
+- Alluvial soil in Gangetic plains, suitable for rice and jute cultivation
+- Major crops: Rice (multiple varieties), jute, potato, sugarcane, vegetables
+- Traditional farming practices adapted to Bengal's high humidity and monsoon patterns
+- Key agricultural districts: Hooghly, Burdwan, Nadia, Cooch Behar, Murshidabad
+
+🇮🇳 INDIAN AGRICULTURAL CONTEXT:
+- ICAR guidelines and research recommendations
+- Government schemes and subsidies available to farmers
+- Market systems including mandis and cooperative societies
+- Seasonal patterns and weather considerations for Eastern India
+
+Please provide:
+1. Specific advice relevant to West Bengal's climate and soil conditions
+2. Mention of appropriate crop varieties if applicable
+3. Seasonal timing considerations for Bengal's agricultural calendar
+4. References to local agricultural practices where relevant
+5. Government resources or extension services that could help
+
+Start your response by clearly stating this is general agricultural knowledge since specific data wasn't found in our knowledge base.
+
+Provide practical, actionable advice that would be valuable for farmers in West Bengal."""
+            
+            response = self.model.generate_content(fallback_prompt)
+            
+            return RAGResponse(
+                answer=response.text.strip(),
+                sources=[],
+                confidence=0.6,  # Lower confidence for fallback responses
+                context_used="General West Bengal/Indian agricultural knowledge via LLM"
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to generate LLM fallback response: {e}")
+            
+            # Check if it's a quota/API issue
+            if "quota" in str(e).lower() or "429" in str(e):
+                return RAGResponse(
+                    answer=f"""I apologize, but I'm currently experiencing API limitations and cannot provide a detailed response to your question: "{query}"
+
+This appears to be related to API quota limits. To resolve this:
+
+1. **For the system administrator**: Please check and update the Gemini API key and quota limits
+2. **For immediate help**: Please contact your local agricultural extension office or Krishi Vigyan Kendra
+3. **Alternative resources**: 
+   - West Bengal State Agriculture Department: wb.gov.in
+   - ICAR research publications: icar.org.in
+   - West Bengal Agricultural University: wbau.ac.in
+
+Your question about "{query}" is important for agricultural planning. Please try again later or consult local agricultural experts for immediate guidance.""",
+                    sources=[],
+                    confidence=0.0,
+                    context_used="API quota exceeded - unable to generate response"
+                )
+            else:
+                return RAGResponse(
+                    answer=f"""I apologize, but I'm currently unable to process your agricultural question: "{query}" due to a technical issue.
+
+For immediate agricultural guidance, I recommend:
+
+1. **Contact local experts**: Visit your nearest Krishi Vigyan Kendra or agricultural extension office
+2. **Government resources**: Check West Bengal State Agriculture Department website (wb.gov.in)
+3. **Research institutions**: West Bengal Agricultural University (Mohanpur) provides expert guidance
+4. **ICAR resources**: Visit icar.org.in for research-based agricultural advice
+
+Please try your question again later, or consult these local agricultural resources for immediate assistance.""",
+                    sources=[],
+                    confidence=0.0,
+                    context_used=f"Technical error occurred: {str(e)}"
+                )
+    
+
+
     def generate_simple_response(self, prompt: str) -> str:
         """Generate a simple response without RAG context"""
         try:

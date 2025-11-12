@@ -37,6 +37,7 @@ class RAGResponse(BaseModel):
     answer: str
     sources: list
     query: str
+    confidence: Optional[float] = 0.0
 
 class StatusResponse(BaseModel):
     status: str
@@ -51,21 +52,17 @@ class DetectionResponse(BaseModel):
 
 # Helper function to run RAG query
 def run_rag_query(query: str) -> dict:
-    """Execute RAG query using the existing rag-script"""
+    """Execute RAG query using the existing rag-script with improved JSON output"""
     try:
         # Path to the RAG script
         rag_script_path = settings.rag_script_path
         
-        # Create a temporary file with the query
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
-            temp_file.write(query)
-            temp_query_file = temp_file.name
-        
-        # Run the RAG CLI with the query
+        # Run the RAG CLI with JSON format for better parsing
         cmd = [
             sys.executable,
             str(rag_script_path / "cli.py"),
-            "--query", query
+            "--query", query,
+            "--format", "json"
         ]
         
         result = subprocess.run(
@@ -75,20 +72,29 @@ def run_rag_query(query: str) -> dict:
             cwd=str(rag_script_path)
         )
         
-        # Clean up temp file
-        os.unlink(temp_query_file)
-        
         if result.returncode != 0:
             raise Exception(f"RAG query failed: {result.stderr}")
         
-        # Parse the output (assuming it returns structured data)
+        # Parse the JSON output
         output = result.stdout.strip()
         
-        return {
-            "answer": output,
-            "sources": [],  # You can enhance this to extract sources
-            "query": query
-        }
+        try:
+            # Parse JSON response
+            response_data = json.loads(output)
+            return {
+                "answer": response_data.get("answer", "No answer generated"),
+                "sources": response_data.get("sources", []),
+                "query": response_data.get("query", query),
+                "confidence": response_data.get("confidence", 0.0)
+            }
+        except json.JSONDecodeError:
+            # Fallback to text output if JSON parsing fails
+            return {
+                "answer": output,
+                "sources": [],
+                "query": query,
+                "confidence": 0.5
+            }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG query failed: {str(e)}")

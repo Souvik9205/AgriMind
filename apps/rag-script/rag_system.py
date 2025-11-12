@@ -42,7 +42,7 @@ class RAGSystem:
     def query(self, question: str, filters: Optional[Dict[str, Any]] = None, 
               use_reranking: bool = True, diverse_results: bool = False) -> RAGResponse:
         """
-        Process a query through the RAG pipeline
+        Process a query through the RAG pipeline with intelligent fallback
         
         Args:
             question: User's question
@@ -56,7 +56,7 @@ class RAGSystem:
         logger.info(f"Processing query: {question[:100]}...")
         
         try:
-            # Retrieve relevant documents
+            # First attempt: Retrieve relevant documents
             if diverse_results:
                 documents = self.retriever.get_diverse_results(question)
             elif use_reranking:
@@ -64,24 +64,48 @@ class RAGSystem:
             else:
                 documents = self.retriever.retrieve_documents(question, filters)
             
-            if not documents:
-                logger.warning("No relevant documents found for query")
+            # If we have good documents, use them
+            if documents and len(documents) > 0:
+                # Check if we have high-quality matches
+                high_quality_docs = [doc for doc in documents if doc.get('similarity_score', 0) > 0.6]
+                
+                if high_quality_docs:
+                    # Use high-quality documents
+                    response = self.llm_client.generate_response(question, high_quality_docs)
+                    logger.info(f"Query processed with {len(high_quality_docs)} high-quality documents, confidence: {response.confidence:.3f}")
+                    return response
+                else:
+                    # Use all documents but with lower confidence
+                    response = self.llm_client.generate_response(question, documents)
+                    # Lower the confidence since documents aren't highly relevant
+                    response.confidence = min(response.confidence * 0.8, 0.7)
+                    logger.info(f"Query processed with {len(documents)} moderate-quality documents, confidence: {response.confidence:.3f}")
+                    return response
+            
+            # Fallback: Check if question is agriculture-related
+            if self.llm_client.is_agriculture_related(question):
+                logger.info("No KB documents found, but query is agriculture-related. Using LLM fallback.")
+                return self.llm_client.generate_fallback_response(question)
+            else:
+                # Non-agriculture question
+                logger.warning("Query is not agriculture-related and no relevant documents found")
                 return RAGResponse(
-                    answer="I couldn't find relevant information in the knowledge base to answer your question. Please try rephrasing your question or ask about West Bengal agriculture, market prices, or farming practices.",
+                    answer="I'm specialized in agricultural topics, particularly for West Bengal. Your question doesn't seem to be related to agriculture, farming, or crops. Please ask about farming practices, crop cultivation, market prices, or agricultural advisories.",
                     sources=[],
                     confidence=0.0,
-                    context_used="No relevant context found"
+                    context_used="Non-agricultural query detected"
                 )
-            
-            # Generate response using LLM
-            response = self.llm_client.generate_response(question, documents)
-            
-            logger.info(f"Query processed successfully. Retrieved {len(documents)} documents, confidence: {response.confidence:.3f}")
-            
-            return response
             
         except Exception as e:
             logger.error(f"Query processing failed: {e}")
+            # Even for errors, try agriculture fallback if relevant
+            try:
+                if self.llm_client.is_agriculture_related(question):
+                    logger.info("Error occurred, attempting fallback for agriculture query")
+                    return self.llm_client.generate_fallback_response(question)
+            except:
+                pass
+            
             return RAGResponse(
                 answer="I apologize, but I encountered an error while processing your question. Please try again later.",
                 sources=[],

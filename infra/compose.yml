@@ -30,5 +30,29 @@ services:
       timeout: 3s
       retries: 20
 
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: agrimind-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://agrimind:agrimind@db:5432/agrimind
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../apps/rag-script:/app/apps/rag-script
+      - ../apps/ml-inference:/app/apps/ml-inference
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   dbdata:

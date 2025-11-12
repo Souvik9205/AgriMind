@@ -139,7 +139,7 @@ def single_query_mode(rag: RAGSystem, query: str, output_format: str = 'text'):
             error_result = {
                 'query': query,
                 'error': str(e),
-                'answer': None,
+                'answer': "I apologize, but I encountered an error while processing your question. Please try again later.",
                 'confidence': 0.0,
                 'sources': []
             }
@@ -211,7 +211,8 @@ Examples:
     
     try:
         # Initialize RAG system
-        print("🚀 Initializing AgriMind RAG System...")
+        if args.format != 'json':
+            print("🚀 Initializing AgriMind RAG System...")
         rag = RAGSystem()
         
         # Handle special commands
