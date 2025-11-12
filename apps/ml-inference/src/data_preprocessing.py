@@ -154,7 +154,6 @@ class DataPreprocessor:
         # Process each dataset
         datasets_processors = [
             self.process_plantvillage_dataset,
-            self.process_bengal_leaf_disease_dataset,
             self.process_crop_diseases_dataset,
             self.process_rice_leaf_diseases_dataset
         ]

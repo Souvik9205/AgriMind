@@ -9,12 +9,7 @@
     "clean": "/Users/souvik/Desktop/AgriMind/.venv/bin/python src/process.py --clean",
     "dev": "/Users/souvik/Desktop/AgriMind/.venv/bin/python src/process.py --clean"
   },
-  "dependencies": {
-    "pandas": ">=1.5.0",
-    "PyPDF2": ">=3.0.0",
-    "numpy": ">=1.24.0",
-    "python-dateutil": ">=2.8.0"
-  },
+  "dependencies": {},
   "keywords": [
     "agriculture",
     "west-bengal",

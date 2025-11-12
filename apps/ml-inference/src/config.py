@@ -7,6 +7,10 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
@@ -52,7 +56,7 @@ DATASETS = {
 class ModelConfig:
     """Model configuration"""
     # Model architecture
-    backbone: str = "efficientnet-b3"
+    backbone: str = "efficientnet_b3"
     pretrained: bool = True
     num_classes: int = 100  # Will be updated based on datasets
     dropout_rate: float = 0.3
@@ -61,8 +65,8 @@ class ModelConfig:
     batch_size: int = 32
     learning_rate: float = 1e-4
     weight_decay: float = 1e-5
-    epochs: int = 100
-    early_stopping_patience: int = 10
+    epochs: int = 30
+    early_stopping_patience: int = 7
     
     # Optimization
     optimizer: str = "adamw"

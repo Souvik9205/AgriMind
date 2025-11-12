@@ -69,6 +69,12 @@ class PlantDiseaseTrainer:
     def init_wandb(self):
         """Initialize Weights & Biases logging."""
         try:
+            # Set wandb API key from environment if available
+            wandb_api_key = os.getenv("WANDB_API_KEY")
+            if wandb_api_key:
+                os.environ["WANDB_API_KEY"] = wandb_api_key
+                wandb.login(key=wandb_api_key)
+            
             self.wandb_run = wandb.init(
                 project=WANDB_PROJECT,
                 config=self.config,

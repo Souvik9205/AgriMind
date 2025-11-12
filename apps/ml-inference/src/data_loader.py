@@ -94,7 +94,7 @@ class PlantDiseaseDataset(Dataset):
         
         # Apply transforms
         if self.transform:
-            if ALBUMENTATIONS_AVAILABLE and hasattr(self.transform, 'apply'):
+            if ALBUMENTATIONS_AVAILABLE and 'albumentations' in str(type(self.transform)):
                 # Albumentations transform
                 image_np = np.array(image)
                 transformed = self.transform(image=image_np)
@@ -139,14 +139,13 @@ def get_train_transforms(image_size: Tuple[int, int] = (224, 224)):
             A.OneOf([
                 A.GaussianBlur(blur_limit=3, p=1.0),
                 A.MotionBlur(blur_limit=3, p=1.0),
-                A.GaussNoise(var_limit=(10.0, 50.0), p=1.0),
+                A.GaussNoise(std_range=(0.2, 0.5), mean_range=(0.0, 0.0), p=1.0),
             ], p=config.gaussian_blur),
             A.CoarseDropout(
-                max_holes=8,
-                max_height=image_size[0] // 8,
-                max_width=image_size[1] // 8,
-                min_holes=1,
-                fill_value=0,
+                num_holes_range=(1, 8),
+                hole_height_range=(0.05, 0.125),
+                hole_width_range=(0.05, 0.125),
+                fill=0,
                 p=0.3
             ),
             A.Normalize(mean=config.mean, std=config.std),
