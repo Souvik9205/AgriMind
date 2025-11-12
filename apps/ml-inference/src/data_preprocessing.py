@@ -109,25 +109,6 @@ class DataPreprocessor:
         return image_label_pairs
     
 
-    
-    def process_bengal_leaf_disease_dataset(self) -> List[Tuple[str, str]]:
-        """Process Bengal Leaf Disease dataset."""
-        dataset_path = DATASETS["bengal_leaf_disease"].path
-        logger.info(f"Processing Bengal Leaf Disease dataset from {dataset_path}")
-        
-        image_label_pairs = []
-        
-        # Direct class folders structure
-        for class_dir in dataset_path.iterdir():
-            if class_dir.is_dir() and class_dir.name != ".DS_Store":
-                class_name = class_dir.name
-                for img_path in class_dir.glob("*.*"):
-                    if img_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp']:
-                        image_label_pairs.append((str(img_path), class_name))
-        
-        logger.info(f"Found {len(image_label_pairs)} images in Bengal Leaf Disease dataset")
-        return image_label_pairs
-    
     def process_crop_diseases_dataset(self) -> List[Tuple[str, str]]:
         """Process Crop Diseases dataset."""
         dataset_path = DATASETS["crop_diseases"].path

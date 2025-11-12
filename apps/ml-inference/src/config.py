@@ -34,12 +34,6 @@ DATASETS = {
         classes=[],  # Will be auto-detected
         image_size=(224, 224)
     ),
-    "bengal_leaf_disease": DatasetConfig(
-        name="Bengal Leaf Disease",
-        path=DATA_DIR / "BengalLeafDisease",
-        classes=[],
-        image_size=(224, 224)
-    ),
     "crop_diseases": DatasetConfig(
         name="Crop Diseases",
         path=DATA_DIR / "Crop Diseases",
