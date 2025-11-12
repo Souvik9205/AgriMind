@@ -10,8 +10,6 @@ from config import BASE_DIR
 from data_preprocessing import main as preprocess_main
 from train import main as train_main
 from evaluate import main as evaluate_main
-from api import app
-import uvicorn
 
 # Set up logging
 logging.basicConfig(
@@ -86,12 +84,21 @@ def main():
     evaluate_parser = subparsers.add_parser('evaluate', help='Evaluate trained model')
     evaluate_parser.add_argument('--model', type=str, help='Path to model checkpoint')
     
-    # Serve API command
-    serve_parser = subparsers.add_parser('serve', help='Start the API server')
-    serve_parser.add_argument('--host', type=str, default='0.0.0.0', help='Host address')
-    serve_parser.add_argument('--port', type=int, default=8000, help='Port number')
-    serve_parser.add_argument('--workers', type=int, default=1, help='Number of workers')
-    serve_parser.add_argument('--reload', action='store_true', help='Enable auto-reload')
+    # Predict command
+    predict_parser = subparsers.add_parser('predict', help='Predict plant disease from image')
+    predict_parser.add_argument('image_path', help='Path to image file')
+    predict_parser.add_argument('--model', type=str, help='Path to model checkpoint')
+    predict_parser.add_argument('--top-k', type=int, default=3, help='Number of top predictions')
+    predict_parser.add_argument('--output', type=str, help='Output file for results (JSON)')
+    
+    # Batch predict command
+    batch_predict_parser = subparsers.add_parser('batch-predict', help='Predict multiple images')
+    batch_predict_parser.add_argument('input_dir', help='Directory containing images')
+    batch_predict_parser.add_argument('--model', type=str, help='Path to model checkpoint')
+    batch_predict_parser.add_argument('--output', type=str, help='Output CSV file for results')
+    batch_predict_parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
+    
+
     
     # Full pipeline command
     pipeline_parser = subparsers.add_parser('pipeline', help='Run full ML pipeline')
@@ -142,16 +149,86 @@ def main():
         
         evaluate_main()
     
-    elif args.command == 'serve':
-        logger.info("Starting API server...")
+    elif args.command == 'predict':
+        logger.info("Making prediction...")
         
-        uvicorn.run(
-            "src.api:app",
-            host=args.host,
-            port=args.port,
-            workers=args.workers,
-            reload=args.reload
-        )
+        from inference import predict_image
+        import json
+        
+        try:
+            result = predict_image(
+                image_path=args.image_path,
+                model_path=args.model,
+                top_k=args.top_k
+            )
+            
+            print(f"\nPrediction for: {args.image_path}")
+            print(f"Predicted class: {result['predicted_class']}")
+            print(f"Confidence: {result['confidence']:.4f}")
+            
+            print(f"\nTop {args.top_k} predictions:")
+            for i, pred in enumerate(result['top_predictions'], 1):
+                print(f"{i}. {pred['class']}: {pred['confidence']:.4f}")
+            
+            if args.output:
+                with open(args.output, 'w') as f:
+                    json.dump(result, f, indent=2)
+                logger.info(f"Results saved to {args.output}")
+                
+        except Exception as e:
+            logger.error(f"Prediction failed: {e}")
+    
+    elif args.command == 'batch-predict':
+        logger.info("Running batch prediction...")
+        
+        from inference import load_predictor
+        import csv
+        from pathlib import Path
+        
+        try:
+            predictor = load_predictor(model_path=args.model)
+            
+            # Get all image files
+            input_path = Path(args.input_dir)
+            image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
+            image_files = []
+            
+            for ext in image_extensions:
+                image_files.extend(input_path.glob(f"**/*{ext}"))
+                image_files.extend(input_path.glob(f"**/*{ext.upper()}"))
+            
+            logger.info(f"Found {len(image_files)} images")
+            
+            # Make predictions
+            results = []
+            for image_file in image_files:
+                try:
+                    result = predictor.predict(str(image_file))
+                    results.append({
+                        'image_path': str(image_file),
+                        'predicted_class': result['predicted_class'],
+                        'confidence': result['confidence']
+                    })
+                    print(f"✓ {image_file.name}: {result['predicted_class']} ({result['confidence']:.4f})")
+                except Exception as e:
+                    logger.warning(f"Failed to predict {image_file}: {e}")
+                    results.append({
+                        'image_path': str(image_file),
+                        'predicted_class': 'ERROR',
+                        'confidence': 0.0
+                    })
+            
+            # Save results
+            if args.output:
+                with open(args.output, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=['image_path', 'predicted_class', 'confidence'])
+                    writer.writeheader()
+                    writer.writerows(results)
+                logger.info(f"Results saved to {args.output}")
+            
+        except Exception as e:
+            logger.error(f"Batch prediction failed: {e}")
+
     
     elif args.command == 'pipeline':
         logger.info("Running full ML pipeline...")

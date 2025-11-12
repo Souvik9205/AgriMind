@@ -323,15 +323,29 @@ class PlantDiseaseTrainer:
                 patience_counter += 1
             
             # Save checkpoints
-            save_checkpoint({
+            checkpoint_data = {
                 'epoch': self.current_epoch,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
                 'best_accuracy': self.best_accuracy,
                 'training_history': self.training_history,
-                'config': self.config
-            }, is_best, LATEST_MODEL_PATH, BEST_MODEL_PATH)
+                'config': self.config,
+                'model_architecture': {
+                    'backbone': self.config.get('backbone', 'rexnet_150'),
+                    'num_classes': self.model.num_classes,
+                    'dropout_rate': self.config.get('dropout_rate', 0.3)
+                }
+            }
+            
+            save_checkpoint(checkpoint_data, is_best, LATEST_MODEL_PATH, BEST_MODEL_PATH)
+            
+            # Also save just the model state dict for easy inference loading
+            if is_best:
+                from config import MODELS_DIR
+                inference_model_path = MODELS_DIR / "crop_best_model.pth"
+                torch.save(self.model.state_dict(), inference_model_path)
+                logger.info(f"Best model state dict saved for inference: {inference_model_path}")
             
             # Log progress
             elapsed_time = time.time() - start_time

@@ -41,7 +41,7 @@ python tool.py info
 The pre-trained model can detect these 35 plant diseases:
 
 - **Rice**: Brown Spot, Healthy, Leaf Blast, Neck Blast, Bacterial leaf blight, Leaf smut
-- **Corn**: Common Rust, Gray Leaf Spot, Healthy, Northern Leaf Blight  
+- **Corn**: Common Rust, Gray Leaf Spot, Healthy, Northern Leaf Blight
 - **Potato**: Early Blight, Healthy, Late Blight
 - **Tomato**: Bacterial spot, Early blight, Late blight, Leaf Mold, Septoria leaf spot, Spider mites, Target Spot, Yellow Leaf Curl Virus, Mosaic virus, Healthy
 - **Wheat**: Brown Rust, Healthy, Yellow Rust
@@ -67,11 +67,13 @@ python tool.py info
 ## 📊 Usage Examples
 
 ### Example 1: Quick Disease Check
+
 ```bash
 python tool.py predict rice_leaf.jpg
 ```
 
 Output:
+
 ```
 🔍 Analysis Results for: rice_leaf.jpg
 ==================================================
@@ -85,17 +87,20 @@ Output:
 ```
 
 ### Example 2: Batch Processing
+
 ```bash
 python tool.py batch crop_images/ --output disease_analysis.csv
 ```
 
 This creates a CSV file with columns:
+
 - `image_name`: Name of the image file
 - `predicted_class`: Detected disease
 - `confidence`: Prediction confidence (0.0-1.0)
 - `status`: Processing status
 
 ### Example 3: Using Custom Model
+
 ```bash
 python tool.py predict image.jpg --model my_trained_model.pth
 ```
@@ -113,7 +118,9 @@ python tool.py train --data dataset/ --epochs 50 --batch-size 32 --learning-rate
 ```
 
 ### Dataset Structure
+
 Organize your training data like this:
+
 ```
 dataset/
 ├── class1/
@@ -128,6 +135,7 @@ dataset/
 ```
 
 The training process will:
+
 1. Automatically detect classes from folder names
 2. Split data into train/validation/test sets
 3. Apply data augmentation
@@ -168,6 +176,7 @@ python src/main.py train --config custom_config.json
 ## 🎯 Model Performance
 
 The pre-trained model achieves:
+
 - **Architecture**: ReXNet-150
 - **Training Classes**: 35 plant diseases
 - **Input Size**: 224x224 pixels
@@ -176,19 +185,21 @@ The pre-trained model achieves:
 ## 📝 Output Formats
 
 ### Single Prediction JSON
+
 ```json
 {
   "predicted_class": "Rice___Leaf_Blast",
   "confidence": 0.942,
   "top_predictions": [
-    {"class": "Rice___Leaf_Blast", "confidence": 0.942, "class_id": 17},
-    {"class": "Rice___Brown_Spot", "confidence": 0.041, "class_id": 15},
-    {"class": "Rice___Healthy", "confidence": 0.017, "class_id": 16}
+    { "class": "Rice___Leaf_Blast", "confidence": 0.942, "class_id": 17 },
+    { "class": "Rice___Brown_Spot", "confidence": 0.041, "class_id": 15 },
+    { "class": "Rice___Healthy", "confidence": 0.017, "class_id": 16 }
   ]
 }
 ```
 
 ### Batch Results CSV
+
 ```csv
 image_name,image_path,predicted_class,confidence,status
 rice1.jpg,rice1.jpg,Rice___Leaf_Blast,0.942,success
@@ -204,7 +215,7 @@ tomato3.jpg,tomato3.jpg,Tomato_Early_blight,0.756,success
    - Ensure `output/crop_best_model.pth` exists
    - Or specify custom model with `--model path/to/model.pth`
 
-2. **"Class mapping file not found"**  
+2. **"Class mapping file not found"**
    - Ensure `models/class_mapping.json` exists
    - This file maps class names to numbers
 
@@ -239,7 +250,7 @@ ml-inference/
 │   └── class_mapping.json     # Class definitions
 ├── src/                 # Source code
 │   ├── inference.py     # Inference logic
-│   ├── models.py        # Neural network architectures  
+│   ├── models.py        # Neural network architectures
 │   ├── train.py         # Training pipeline
 │   ├── config.py        # Configuration
 │   └── ...
@@ -266,7 +277,7 @@ For development and advanced usage:
 # Setup project structure
 python src/main.py setup
 
-# Download datasets (if training from scratch)  
+# Download datasets (if training from scratch)
 python src/main.py download
 
 # Preprocess data
@@ -285,6 +296,7 @@ python src/main.py pipeline --skip-download
 ## 📦 Dependencies
 
 Core dependencies include:
+
 - PyTorch & torchvision
 - timm (for model architectures)
 - PIL/Pillow (image processing)
@@ -292,10 +304,12 @@ Core dependencies include:
 - tqdm (progress bars)
 
 Optional:
+
 - wandb (experiment tracking)
 - albumentations (data augmentation)
 
 Install all dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```

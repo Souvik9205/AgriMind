@@ -66,6 +66,14 @@ class PlantDiseaseClassifier(nn.Module):
             )
             self.feature_dim = self.backbone.num_features
             
+        elif backbone.startswith('rexnet'):
+            self.backbone = timm.create_model(
+                backbone,
+                pretrained=pretrained,
+                num_classes=0
+            )
+            self.feature_dim = self.backbone.num_features
+            
         else:
             raise ValueError(f"Unsupported backbone: {backbone}")
         

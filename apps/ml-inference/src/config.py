@@ -56,9 +56,9 @@ DATASETS = {
 class ModelConfig:
     """Model configuration"""
     # Model architecture
-    backbone: str = "efficientnet_b3"
+    backbone: str = "rexnet_150"  # Updated to use the pre-trained model architecture
     pretrained: bool = True
-    num_classes: int = 100  # Will be updated based on datasets
+    num_classes: int = 35  # Updated based on class_mapping.json
     dropout_rate: float = 0.3
     
     # Training parameters
@@ -115,23 +115,9 @@ class AugmentationConfig:
     mean: Tuple[float, float, float] = (0.485, 0.456, 0.406)
     std: Tuple[float, float, float] = (0.229, 0.224, 0.225)
 
-@dataclass
-class APIConfig:
-    """API configuration"""
-    host: str = "0.0.0.0"
-    port: int = 8000
-    workers: int = 1
-    max_image_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_extensions: List[str] = None
-    
-    def __post_init__(self):
-        if self.allowed_extensions is None:
-            self.allowed_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
-
 # Global configurations
 MODEL_CONFIG = ModelConfig()
 AUGMENTATION_CONFIG = AugmentationConfig()
-API_CONFIG = APIConfig()
 
 # Logging configuration
 LOGGING_CONFIG = {
@@ -174,6 +160,9 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 BEST_MODEL_PATH = MODELS_DIR / "best_model.pth"
 LATEST_MODEL_PATH = MODELS_DIR / "latest_model.pth"
 ONNX_MODEL_PATH = MODELS_DIR / "model.onnx"
+
+# Pre-trained model path (in output directory)
+PRETRAINED_MODEL_PATH = BASE_DIR / "output" / "crop_best_model.pth"
 
 # Class mapping file
 CLASS_MAPPING_PATH = MODELS_DIR / "class_mapping.json"
