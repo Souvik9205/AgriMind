@@ -139,7 +139,6 @@ results/
 wandb/
 
 # Model checkpoints
-*.pth
 *.pt
 *.onnx
 *.h5

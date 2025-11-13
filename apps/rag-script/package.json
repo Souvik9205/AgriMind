@@ -22,9 +22,7 @@
   ],
   "author": "AgriMind Team",
   "license": "MIT",
-  "dependencies": {
-    "python": ">=3.8"
-  },
+  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "../../"

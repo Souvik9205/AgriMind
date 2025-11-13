@@ -1,0 +1,11 @@
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+pillow==10.4.0
+python-dotenv==1.0.1
+pydantic==2.9.2
+pydantic-settings==2.6.1
+httpx==0.28.0
+redis==5.2.0
+psycopg2-binary==2.9.9
+requests==2.32.3
