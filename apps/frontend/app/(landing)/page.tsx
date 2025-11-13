@@ -1,7 +1,7 @@
 import React from "react";
-import Header from "@/components/ui/home/header";
-import Hero from "@/components/ui/home/hero";
-import { Footer } from "@/components/ui/home/footer";
+import Header from "@/components/home/header";
+import Hero from "@/components/home/hero";
+import { Footer } from "@/components/home/footer";
 
 const page = () => {
   return (
@@ -14,4 +14,3 @@ const page = () => {
 };
 
 export default page;
-  

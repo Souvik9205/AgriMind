@@ -1,0 +1,36 @@
+export const translations = {
+  en: {
+    brand: "AgriMine",
+    features: "Features",
+    pricing: "Pricing",
+    testimonials: "Testimonials",
+    startTrial: "Start Free Trial",
+    badge: "AI-Powered Agriculture",
+    headline: "Smart Crop Health Analysis at Your Fingertips",
+    description:
+      "Upload a photo of your crop and instantly get AI-powered analysis of plant health, disease detection, and treatment recommendations.",
+    analyzeCrop: "Analyze Your Crop",
+    howItWorks: "How It Works",
+    lovedBy: "Loved by 4,200+ teams",
+    monthlyGrowth: "Monthly growth",
+    churnRate: "Churn rate",
+    activeWorkspaces: "Active workspaces",
+  },
+  bn: {
+    brand: "কৃষিখনি",
+    features: "বৈশিষ্ট্য",
+    pricing: "মূল্য",
+    testimonials: "প্রশংসাপত্র",
+    startTrial: "বিনামূল্যে শুরু করুন",
+    badge: "এআই-চালিত কৃষি",
+    headline: "আপনার হাতের মুঠোয় স্মার্ট ফসল স্বাস্থ্য বিশ্লেষণ",
+    description:
+      "আপনার ফসলের একটি ছবি আপলোড করুন এবং তাৎক্ষণিকভাবে উদ্ভিদ স্বাস্থ্য, রোগ সনাক্তকরণ এবং চিকিৎসার সুপারিশের এআই-চালিত বিশ্লেষণ পান।",
+    analyzeCrop: "আপনার ফসল বিশ্লেষণ করুন",
+    howItWorks: "এটি কিভাবে কাজ করে",
+    lovedBy: "৪,২০০+ দল দ্বারা পছন্দের",
+    monthlyGrowth: "মাসিক বৃদ্ধি",
+    churnRate: "চার্ন রেট",
+    activeWorkspaces: "সক্রিয় কর্মস্থান",
+  },
+};
