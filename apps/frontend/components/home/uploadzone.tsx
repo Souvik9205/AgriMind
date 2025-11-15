@@ -11,13 +11,16 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import React, { useEffect, useRef, useState } from "react";
+import { initialAnalysis, dataURLtoFile, InitialAnalysisResponse, ChatMessage } from "@/lib/api";
+import AnalysisLoading from "./analysis-loading";
+import { ChatInterface } from "./ChatInterface";
 
 declare global {
   interface Window {
     SpeechRecognition: typeof SpeechRecognition;
     webkitSpeechRecognition: typeof SpeechRecognition;
   }
-  
+
   interface SpeechRecognition extends EventTarget {
     new (): SpeechRecognition;
     continuous: boolean;
@@ -29,20 +32,28 @@ declare global {
     onerror: (event: any) => void;
     onend: () => void;
   }
-  
+
   var SpeechRecognition: {
     prototype: SpeechRecognition;
-    new(): SpeechRecognition;
+    new (): SpeechRecognition;
   };
 }
 
 const UploadZone = () => {
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStage, setAnalysisStage] = useState<
+    "uploading" | "processing" | "analyzing" | "complete"
+  >("uploading");
+  const [analysisResults, setAnalysisResults] = useState<InitialAnalysisResponse | null>(null);
+  const [showChat, setShowChat] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -51,6 +62,7 @@ const UploadZone = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onload = (event) => {
         setImage(event.target?.result as string);
@@ -89,6 +101,11 @@ const UploadZone = () => {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
         const imageUrl = canvas.toDataURL("image/png");
         setImage(imageUrl);
+
+        // Convert captured image to File object
+        const file = dataURLtoFile(imageUrl, "captured-image.png");
+        setImageFile(file);
+
         setShowPrompt(true);
         stopCamera();
       }
@@ -98,7 +115,8 @@ const UploadZone = () => {
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       setIsSupported(true);
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition() as SpeechRecognition;
 
       recognitionRef.current.continuous = true;
@@ -144,11 +162,43 @@ const UploadZone = () => {
     setIsListening(!isListening);
   };
 
-  const handleSubmit = () => {
-    console.log({ image, prompt });
+  const handleSubmit = async () => {
+    if (!imageFile || !prompt.trim()) {
+      setError("Please provide both an image and a description of your crop issue.");
+      return;
+    }
+
+    setError(null);
+    setIsAnalyzing(true);
+    setAnalysisStage("uploading");
+
+    try {
+      // Simulate progression through stages
+      setTimeout(() => setAnalysisStage("processing"), 500);
+      setTimeout(() => setAnalysisStage("analyzing"), 2000);
+
+      const results = await initialAnalysis(imageFile, prompt);
+
+      setAnalysisStage("complete");
+      setAnalysisResults(results);
+      setIsAnalyzing(false);
+      setShowChat(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Analysis failed. Please try again.");
+      setIsAnalyzing(false);
+      console.error("Analysis error:", error);
+    }
+  };
+
+  const resetForm = () => {
     setImage(null);
+    setImageFile(null);
     setPrompt("");
     setShowPrompt(false);
+    setIsAnalyzing(false);
+    setAnalysisResults(null);
+    setShowChat(false);
+    setError(null);
   };
 
   return (
@@ -172,7 +222,27 @@ const UploadZone = () => {
         </SheetHeader>
 
         <div className="space-y-6 p-6">
-          {!showPrompt ? (
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Analysis Results */}
+          {showChat && analysisResults && (
+            <ChatInterface
+              initialResponse={analysisResults.response}
+              initialHistory={analysisResults.chat_history}
+              sessionId={analysisResults.session_id}
+            />
+          )}
+
+          {/* Analysis Loading */}
+          {isAnalyzing && <AnalysisLoading stage={analysisStage} />}
+
+          {/* Upload Interface */}
+          {!showPrompt && !isAnalyzing && !analysisResults ? (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div
@@ -224,14 +294,14 @@ const UploadZone = () => {
                 </div>
               )}
             </div>
-          ) : (
+          ) : showPrompt && !isAnalyzing && !analysisResults ? (
             <div className="space-y-4 flex gap-6">
               {image && (
                 <div className="relative bg-gray-100 rounded-lg overflow-hidden h-[500px] flex-1 ">
                   <img src={image} alt="Preview" className="h-full mx-auto object-contain" />
                 </div>
               )}
-              <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 p-8">
+              <div className="min-h-screen bg-linear-to-br from-emerald-50 to-green-100 p-8">
                 <div className="max-w-2xl mx-auto bg-white rounded-xl  p-6">
                   <div className="flex flex-col space-y-4">
                     <label className="text-lg font-medium text-gray-800">
@@ -296,9 +366,7 @@ const UploadZone = () => {
                       onClick={handleSubmit}
                       disabled={!prompt.trim()}
                       className={`px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium transition-all ${
-                        !prompt.trim()
-                          ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-emerald-700 "
+                        !prompt.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-700 "
                       }`}
                     >
                       Analyze Crop
@@ -327,7 +395,7 @@ const UploadZone = () => {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </SheetContent>
     </Sheet>

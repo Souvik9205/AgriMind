@@ -4,7 +4,7 @@
   "scripts": {
     "setup-db": "docker compose -f infra/compose.yml up -d",
     "setup-full": "docker compose -f infra/compose.yml up -d --build",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev --filter=@agrimind/web --filter=@agrimind/api",
     "dev:web": "turbo run dev --filter=@agrimind/web",
     "dev:api": "cd apps/api && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
     "build": "turbo run build",

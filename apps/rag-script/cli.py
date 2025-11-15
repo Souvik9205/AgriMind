@@ -113,10 +113,10 @@ def interactive_mode(rag: RAGSystem):
             import time
             time.sleep(0.5)
 
-def single_query_mode(rag: RAGSystem, query: str, output_format: str = 'text'):
+def single_query_mode(rag: RAGSystem, query: str, output_format: str = 'text', concise: bool = False):
     """Process a single query and output the result"""
     try:
-        response = rag.query(query, diverse_results=True)
+        response = rag.query(query, diverse_results=True, concise=concise)
         
         if output_format == 'json':
             import json
@@ -181,6 +181,13 @@ Examples:
         choices=['text', 'json'],
         default='text',
         help='Output format (default: text)'
+    )
+    
+    parser.add_argument(
+        '--concise',
+        choices=['true', 'false'],
+        default='false',
+        help='Generate concise responses for chat (default: false)'
     )
     
     parser.add_argument(
@@ -250,27 +257,9 @@ Examples:
             if args.region:
                 filters['metadata'] = {'region': args.region}
             
-            # Process single query
-            if filters:
-                response = rag.query(args.query, filters=filters)
-            else:
-                response = rag.query(args.query, diverse_results=True)
-            
-            # Output result
-            if args.format == 'json':
-                import json
-                result = {
-                    'query': args.query,
-                    'answer': response.answer,
-                    'confidence': response.confidence,
-                    'sources': response.sources
-                }
-                print(json.dumps(result, indent=2))
-            else:
-                print(f"\nQuery: {args.query}")
-                print(f"\nAnswer: {response.answer}")
-                print(f"\nConfidence: {response.confidence:.1%}")
-                print(f"Sources: {len(response.sources)} documents")
+            # Process single query with concise option
+            concise = args.concise == 'true'
+            single_query_mode(rag, args.query, args.format, concise)
         else:
             # Interactive mode
             interactive_mode(rag)

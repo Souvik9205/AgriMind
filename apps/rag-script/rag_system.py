@@ -40,7 +40,7 @@ class RAGSystem:
             raise
     
     def query(self, question: str, filters: Optional[Dict[str, Any]] = None, 
-              use_reranking: bool = True, diverse_results: bool = False) -> RAGResponse:
+              use_reranking: bool = True, diverse_results: bool = False, concise: bool = False) -> RAGResponse:
         """
         Process a query through the RAG pipeline with intelligent fallback
         
@@ -71,12 +71,12 @@ class RAGSystem:
                 
                 if high_quality_docs:
                     # Use high-quality documents
-                    response = self.llm_client.generate_response(question, high_quality_docs)
+                    response = self.llm_client.generate_response(question, high_quality_docs, concise=concise)
                     logger.info(f"Query processed with {len(high_quality_docs)} high-quality documents, confidence: {response.confidence:.3f}")
                     return response
                 else:
                     # Use all documents but with lower confidence
-                    response = self.llm_client.generate_response(question, documents)
+                    response = self.llm_client.generate_response(question, documents, concise=concise)
                     # Lower the confidence since documents aren't highly relevant
                     response.confidence = min(response.confidence * 0.8, 0.7)
                     logger.info(f"Query processed with {len(documents)} moderate-quality documents, confidence: {response.confidence:.3f}")
@@ -85,7 +85,7 @@ class RAGSystem:
             # Fallback: Check if question is agriculture-related
             if self.llm_client.is_agriculture_related(question):
                 logger.info("No KB documents found, but query is agriculture-related. Using LLM fallback.")
-                return self.llm_client.generate_fallback_response(question)
+                return self.llm_client.generate_fallback_response(question, concise=concise)
             else:
                 # Non-agriculture question
                 logger.warning("Query is not agriculture-related and no relevant documents found")

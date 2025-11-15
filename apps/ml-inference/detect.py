@@ -100,30 +100,86 @@ class AgriMindPredictor:
             "prevention": "Regular monitoring and good farming practices"
         }
         
-        # Parse crop type
-        if "Corn" in label:
+        # Parse crop type from model labels (format: Crop___Disease)
+        if "Corn___" in label or "Corn" in label:
             info["crop"] = "Corn/Maize"
-        elif "Potato" in label:
+        elif "Potato___" in label or "Potato" in label:
             info["crop"] = "Potato"
-        elif "Rice" in label:
+        elif "Rice___" in label or "Rice" in label:
             info["crop"] = "Rice"
-        elif "Wheat" in label:
+        elif "Wheat___" in label or "Wheat" in label:
             info["crop"] = "Wheat"
+        else:
+            # Try to extract crop from the first part of the label if it follows Crop___Disease format
+            if "___" in label:
+                crop_part = label.split("___")[0]
+                if crop_part and crop_part != "Invalid":
+                    info["crop"] = crop_part.replace("_", " ").title()
+            else:
+                # Fallback: try to identify common crop patterns
+                label_lower = label.lower()
+                if any(crop in label_lower for crop in ["corn", "maize"]):
+                    info["crop"] = "Corn/Maize"
+                elif any(crop in label_lower for crop in ["potato", "tomato"]):
+                    info["crop"] = "Potato"
+                elif "rice" in label_lower:
+                    info["crop"] = "Rice"
+                elif "wheat" in label_lower:
+                    info["crop"] = "Wheat"
+                elif any(crop in label_lower for crop in ["bean", "soybean"]):
+                    info["crop"] = "Bean"
+                elif any(crop in label_lower for crop in ["cotton"]):
+                    info["crop"] = "Cotton"
         
-        # Parse condition
+        # Parse condition from model labels
         if "Healthy" in label:
             info.update({
-                "condition": "Healthy Plant",
+                "condition": "Healthy Plant", 
                 "severity": "None",
                 "treatment": "No treatment needed - continue regular care",
                 "prevention": "Maintain current good practices"
             })
-        elif "Brown_Rust" in label or "Rust" in label:
+        elif "Brown_Rust" in label or "Brown Rust" in label:
             info.update({
                 "condition": "Brown Rust (Leaf Rust)",
                 "severity": "High",
                 "treatment": "Apply fungicide immediately. Remove infected leaves. Improve air circulation.",
                 "prevention": "Use resistant varieties, proper plant spacing, avoid overhead watering"
+            })
+        elif "Yellow_Rust" in label or "Yellow Rust" in label:
+            info.update({
+                "condition": "Yellow Rust",
+                "severity": "High", 
+                "treatment": "Apply systemic fungicide, monitor weather conditions",
+                "prevention": "Use resistant cultivars, timely planting"
+            })
+        elif "Common_Rust" in label or "Common Rust" in label:
+            info.update({
+                "condition": "Common Rust",
+                "severity": "Medium",
+                "treatment": "Apply fungicide if severe, monitor crop closely",
+                "prevention": "Plant resistant hybrids, proper field spacing"
+            })
+        elif "Gray_Leaf_Spot" in label or "Gray Leaf Spot" in label:
+            info.update({
+                "condition": "Gray Leaf Spot",
+                "severity": "Medium",
+                "treatment": "Apply fungicide, improve field drainage", 
+                "prevention": "Crop rotation, resistant varieties, proper field sanitation"
+            })
+        elif "Brown_Spot" in label or "Brown Spot" in label:
+            info.update({
+                "condition": "Brown Spot",
+                "severity": "Medium",
+                "treatment": "Apply appropriate fungicide, improve field management",
+                "prevention": "Proper water management, balanced nutrition, resistant varieties"
+            })
+        elif "Leaf_Blast" in label or "Leaf Blast" in label:
+            info.update({
+                "condition": "Leaf Blast",
+                "severity": "High",
+                "treatment": "Apply systemic fungicide immediately, remove infected plants",
+                "prevention": "Use resistant varieties, proper nitrogen management, avoid excessive moisture"
             })
         elif "Early_Blight" in label:
             info.update({
@@ -167,6 +223,19 @@ class AgriMindPredictor:
                 "treatment": "Apply fungicide if severe, monitor crop closely",
                 "prevention": "Plant resistant hybrids, proper field spacing"
             })
+        else:
+            # Fallback: try to extract disease from the label format
+            if "___" in label and not "Invalid" in label:
+                disease_part = label.split("___")[1] if len(label.split("___")) > 1 else label
+                # Clean up the disease name
+                condition_name = disease_part.replace("_", " ").title()
+                info["condition"] = condition_name
+                
+                # Set default severity based on disease type patterns
+                if any(keyword in condition_name.lower() for keyword in ["rust", "blight", "blast"]):
+                    info["severity"] = "High"
+                elif any(keyword in condition_name.lower() for keyword in ["spot", "mold"]):
+                    info["severity"] = "Medium"
         
         return info
 

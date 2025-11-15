@@ -68,14 +68,14 @@ class LLMClient:
 
 Always contextualize advice for West Bengal's unique agro-climatic conditions and Indian agricultural policies."""
 
-    def generate_response(self, query: str, context_documents: List[Dict[str, Any]]) -> RAGResponse:
+    def generate_response(self, query: str, context_documents: List[Dict[str, Any]], concise: bool = False) -> RAGResponse:
         """Generate a response using the LLM with retrieved context"""
         try:
             # Prepare context
             context = self._prepare_context(context_documents)
             
             # Create the prompt
-            prompt = self._create_prompt(query, context)
+            prompt = self._create_prompt(query, context, concise)
             
             # Generate response
             response = self.model.generate_content(prompt)
@@ -129,9 +129,45 @@ Content: {doc.get('content', '')}
         
         return "\n".join(context_parts)
     
-    def _create_prompt(self, query: str, context: str) -> str:
+    def _create_prompt(self, query: str, context: str, concise: bool = False) -> str:
         """Create the complete prompt for the LLM"""
-        prompt = f"""{self.system_prompt}
+        
+        if concise:
+            # Detect query type for ultra-concise responses
+            query_lower = query.lower()
+            is_identification_query = any(word in query_lower for word in 
+                                        ['what is', 'what are', 'identify', 'this', 'these', 'spots', 'dots', 'marks'])
+            
+            if is_identification_query:
+                # Ultra-concise for identification queries
+                concise_system_prompt = """You are AgriMind. Answer in maximum 30 words. Be direct and specific."""
+                
+                prompt = f"""{concise_system_prompt}
+
+CONTEXT: {context}
+
+QUESTION: {query}
+
+Answer format: **[Disease/Issue Name]** - [2-3 word description]. [One action needed]."""
+            else:
+                # Standard concise for other queries  
+                concise_system_prompt = """You are AgriMind, an agricultural expert for West Bengal. Provide concise, actionable answers only. Maximum 60 words. Use bullet points."""
+                
+                prompt = f"""{concise_system_prompt}
+
+CONTEXT: {context}
+
+QUESTION: {query}
+
+Format response as:
+**Issue:** [1 line]
+**Actions:**
+• [Action 1]
+• [Action 2] 
+**Contact:** [KVK/local expert]"""
+        else:
+            # Original comprehensive prompt
+            prompt = f"""{self.system_prompt}
 
 CONTEXT FROM KNOWLEDGE BASE:
 {context}
@@ -231,10 +267,31 @@ ANSWER:"""
         
         return keyword_match or phrase_match
 
-    def generate_fallback_response(self, query: str) -> RAGResponse:
+    def generate_fallback_response(self, query: str, concise: bool = False) -> RAGResponse:
         """Generate response using LLM's general knowledge when KB fails"""
         try:
-            fallback_prompt = f"""You are AgriMind, an expert agricultural assistant specializing in West Bengal and Indian agriculture. 
+            # Create appropriate prompt based on mode
+            if concise:
+                # Check if it's an identification query
+                query_lower = query.lower()
+                is_identification_query = any(word in query_lower for word in 
+                                            ['what is', 'what are', 'identify', 'this', 'these', 'spots', 'dots', 'marks'])
+                
+                if is_identification_query:
+                    fallback_prompt = f"""You are AgriMind, an agricultural expert. The user asked: "{query}"
+                    
+Based on general agricultural knowledge, provide a direct 25-word answer in format:
+**[Disease/Issue Name]** - [brief description]. Apply [specific fungicide/treatment] immediately."""
+                else:
+                    fallback_prompt = f"""You are AgriMind, agricultural expert for West Bengal. User asked: "{query}"
+                    
+Provide concise answer (max 50 words) with format:
+**Issue:** [problem]
+**Action:** [2 main steps]
+**Contact:** Local KVK"""
+            else:
+                # Full detailed response
+                fallback_prompt = f"""You are AgriMind, an expert agricultural assistant specializing in West Bengal and Indian agriculture. 
 
 The user has asked: "{query}"
 

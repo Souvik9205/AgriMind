@@ -1,6 +1,6 @@
-'use client'
+"use client";
 import { Poppins } from "next/font/google";
-import UploadZone from "./uploadzone";
+import ImprovedUploadZone from "./improved-uploadzone";
 import Image from "next/image";
 import { useLanguage } from "@/hooks/languageProvider";
 import { translations } from "@/constants";
@@ -34,9 +34,7 @@ export default function Hero() {
               >
                 {t.headline}
               </h1>
-              <p className="text-[18px] text-slate-100 mb-6">
-                {t.description}
-              </p>
+              <p className="text-[18px] text-slate-100 mb-6">{t.description}</p>
               <div className="flex gap-3 flex-wrap items-center">
                 <button className="bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold transition hover:-translate-y-0.5">
                   {t.analyzeCrop}
@@ -58,7 +56,7 @@ export default function Hero() {
                 <span className="text-slate-100 text-[14px]">{t.lovedBy}</span>
               </div>
             </div>
-            <UploadZone />
+            <ImprovedUploadZone />
           </div>
         </div>
         <div className="w-full max-w-[1200px] mx-auto px-4 pt-2 pb-9">

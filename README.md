@@ -6,11 +6,30 @@ An AI-powered agricultural assistance platform combining plant disease detection
 
 - **🔬 Plant Disease Detection**: AI-powered disease identification using Vision Transformer models
 - **🧠 Agricultural Knowledge Assistant**: RAG-powered Q&A system for farming guidance
+- **🌐 Web Interface**: Modern React frontend with image upload and voice input
+- **🔗 Integrated Analysis**: Combined image + query processing for comprehensive insights
 - **🌾 Crop-Specific Insights**: Specialized knowledge for Corn, Potato, Rice, and Wheat
 - **📊 Market Intelligence**: Real-time market data and price information
 - **🗺️ Regional Expertise**: Focused on West Bengal agriculture and practices
 
 ## 🚀 Quick Start
+
+### Full Application (Frontend + Backend)
+
+1. **Setup Database & Services**:
+
+   ```bash
+   pnpm setup-db
+   ```
+
+2. **Start the Complete Application**:
+
+   ```bash
+   pnpm dev
+   ```
+
+3. **Open Your Browser**:
+   Navigate to `http://localhost:3000` and start analyzing your crops!
 
 ### Plant Disease Detection
 
@@ -62,6 +81,7 @@ npm run ask-agrimind -- --query "Farming practices in Murshidabad" --region "Mur
 ## ⚙️ Setup
 
 1. **Clone and setup environment**:
+
    ```bash
    git clone <repository-url>
    cd AgriMind
@@ -70,6 +90,7 @@ npm run ask-agrimind -- --query "Farming practices in Murshidabad" --region "Mur
    ```
 
 2. **Install dependencies**:
+
    ```bash
    pnpm install
    pip install -r apps/ml-inference/requirements.txt
@@ -77,11 +98,13 @@ npm run ask-agrimind -- --query "Farming practices in Murshidabad" --region "Mur
    ```
 
 3. **Setup database services**:
+
    ```bash
    npm run setup-db
    ```
 
 4. **Initialize RAG system** (one-time setup):
+
    ```bash
    cd apps/rag-script
    python setup_db.py
@@ -90,6 +113,7 @@ npm run ask-agrimind -- --query "Farming practices in Murshidabad" --region "Mur
    ```
 
 5. **Test the systems**:
+
    ```bash
    # Test disease detection
    npm run detect-disease apps/ml-inference/sample_image.jpg
