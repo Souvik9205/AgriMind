@@ -2,6 +2,8 @@
 REM AgriMind Docker Startup Script for Windows
 REM This script starts the entire AgriMind stack with databases
 
+setlocal enabledelayedexpansion
+
 echo 🌱 Starting AgriMind with Docker Compose...
 echo ==========================================
 
@@ -44,11 +46,41 @@ docker-compose up --build -d
 echo.
 echo ⏳ Waiting for services to be healthy...
 
-REM Wait for services (simplified for Windows)
-timeout /t 10 /nobreak >nul
+REM Wait for PostgreSQL to be ready
+echo 🗄️  Waiting for PostgreSQL...
+:wait_postgres
+docker-compose exec -T db pg_isready -U agrimind -d agrimind >nul 2>&1
+if errorlevel 1 (
+    echo|set /p="."
+    timeout /t 2 /nobreak >nul
+    goto wait_postgres
+)
+echo  ✅ PostgreSQL is ready!
+
+REM Wait for Redis to be ready
+echo 🔄 Waiting for Redis...
+:wait_redis
+docker-compose exec -T redis redis-cli ping >nul 2>&1
+if errorlevel 1 (
+    echo|set /p="."
+    timeout /t 1 /nobreak >nul
+    goto wait_redis
+)
+echo  ✅ Redis is ready!
+
+REM Wait for API to be ready
+echo 🔌 Waiting for API server...
+:wait_api
+curl -f http://localhost:8000/health >nul 2>&1
+if errorlevel 1 (
+    echo|set /p="."
+    timeout /t 2 /nobreak >nul
+    goto wait_api
+)
+echo  ✅ API server is ready!
 
 echo.
-echo 🎉 AgriMind should now be running!
+echo 🎉 AgriMind is now running!
 echo ==========================================
 echo 📊 Services Status:
 docker-compose ps
