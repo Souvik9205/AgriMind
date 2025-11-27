@@ -62,7 +62,6 @@ const ImprovedUploadZone = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
-  // Analysis states - Two-phase flow
   const [isQuickAnalyzing, setIsQuickAnalyzing] = useState(false);
   const [quickResults, setQuickResults] = useState<QuickAnalysisResult | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -74,7 +73,6 @@ const ImprovedUploadZone = () => {
   const [error, setError] = useState<string | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState<number>(0);
 
-  // Voice recognition states
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -131,7 +129,6 @@ const ImprovedUploadZone = () => {
     }
   };
 
-  // Voice recognition setup
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       setIsSupported(true);
@@ -311,40 +308,48 @@ const ImprovedUploadZone = () => {
             </div>
           )}
 
-          {/* Progress Indicator */}
-          {(isQuickAnalyzing || isDetailedAnalyzing || analysisProgress > 0) && (
-            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-emerald-800 font-medium">
-                  {isQuickAnalyzing && "⚡ Quick Analysis..."}
-                  {quickResults && isDetailedAnalyzing && "🔍 Getting Detailed Recommendations..."}
-                  {!isQuickAnalyzing &&
-                    !isDetailedAnalyzing &&
-                    analysisProgress === 100 &&
-                    "✅ Analysis Complete"}
-                </span>
-                <span className="text-emerald-600 text-sm">{analysisProgress}%</span>
+          {analysisProgress !== 100 &&
+            (isQuickAnalyzing || isDetailedAnalyzing || analysisProgress > 0) && (
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-emerald-800 font-medium">
+                    {isQuickAnalyzing && "⚡ Quick Analysis..."}
+                    {quickResults &&
+                      isDetailedAnalyzing &&
+                      "🔍 Getting Detailed Recommendations..."}
+                    {!isQuickAnalyzing &&
+                      !isDetailedAnalyzing &&
+                      analysisProgress === 100 &&
+                      "✅ Analysis Complete"}
+                  </span>
+                  <span className="text-emerald-600 text-sm">{analysisProgress}%</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-emerald-100 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${analysisProgress}%` }}
+                  ></div>
+                </div>
+
+                {/* Status text */}
+                {isQuickAnalyzing && (
+                  <p className="text-emerald-700 text-xs mt-2">
+                    <Zap className="w-3 h-3 inline mr-1" />
+                    Analyzing image... (~2–3 seconds)
+                  </p>
+                )}
+
+                {isDetailedAnalyzing && (
+                  <p className="text-blue-700 text-xs mt-2">
+                    <Clock className="w-3 h-3 inline mr-1" />
+                    Fetching detailed recommendations... (~15–20 seconds)
+                  </p>
+                )}
               </div>
-              <div className="w-full bg-emerald-100 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${analysisProgress}%` }}
-                ></div>
-              </div>
-              {isQuickAnalyzing && (
-                <p className="text-emerald-700 text-xs mt-2">
-                  <Zap className="w-3 h-3 inline mr-1" />
-                  Analyzing image... (~2-3 seconds)
-                </p>
-              )}
-              {isDetailedAnalyzing && (
-                <p className="text-blue-700 text-xs mt-2">
-                  <Clock className="w-3 h-3 inline mr-1" />
-                  Fetching detailed recommendations... (~15-20 seconds)
-                </p>
-              )}
-            </div>
-          )}
+            )}
 
           {/* Quick Results Display */}
           {quickResults && !showChat && (
