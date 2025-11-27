@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "setup": "./setup.sh",
-    "setup:windows": "./setup.bat",
+    "setup:windows": ".\\setup.bat",
     "setup-db": "docker compose -f infra/compose.yml up -d",
     "setup-full": "docker compose -f infra/compose.yml up -d --build",
     "dev": "turbo run dev --filter=@agrimind/web --filter=@agrimind/api",

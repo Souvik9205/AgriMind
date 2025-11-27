@@ -26,10 +26,9 @@ export function ChatInterface({
   const [showTypewriter, setShowTypewriter] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Update messages when initialHistory changes
   useEffect(() => {
     setMessages(initialHistory);
-    setShowTypewriter(true); // Reset typewriter for new messages
+    setShowTypewriter(true);
   }, [initialHistory]);
 
   const scrollToBottom = () => {
@@ -45,30 +44,28 @@ export function ChatInterface({
 
     const userMessage = inputMessage.trim();
     setInputMessage("");
+
+    // Add user message immediately
+    const newUserMessage: ChatMessage = {
+      role: "user",
+      content: userMessage,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, newUserMessage]);
     setIsLoading(true);
 
     try {
       const response = await chatFollowUp(userMessage, messages);
-
       setMessages(response.chat_history);
       setShowTypewriter(true);
     } catch (error) {
       console.error("Chat error:", error);
-      // Add error message to chat
       const errorMessage: ChatMessage = {
         role: "assistant",
         content: "Sorry, I encountered an error. Please try again.",
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "user",
-          content: userMessage,
-          timestamp: new Date().toISOString(),
-        },
-        errorMessage,
-      ]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -82,10 +79,7 @@ export function ChatInterface({
   };
 
   const formatMessage = (content: string) => {
-    return content
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/• (.*?)(?=\n|$)/g, '• <span class="ml-2">$1</span>')
-      .replace(/\n/g, "<br />");
+    return content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br />");
   };
 
   const isLastAssistantMessage = (index: number) => {
@@ -98,11 +92,8 @@ export function ChatInterface({
         {/* Chat Header */}
         <div className="p-4 border-b bg-green-50">
           <div className="flex items-center space-x-2">
-            <Bot className="h-6 w-6 text-green-600" />
+            <Bot className="h-5 w-5 text-green-600" />
             <span className="font-semibold text-green-800">AgriMind Assistant</span>
-            <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
-              Session Active
-            </span>
           </div>
         </div>
 
@@ -114,39 +105,24 @@ export function ChatInterface({
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[75%] rounded-lg p-3 ${
                   message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
                 }`}
               >
-                <div className="flex items-start space-x-2">
-                  {message.role === "assistant" && (
-                    <Bot className="h-4 w-4 mt-1 shrink-0 text-green-600" />
-                  )}
-                  {message.role === "user" && <User className="h-4 w-4 mt-1 shrink-0 text-white" />}
-                  <div className="flex-1">
-                    {message.role === "assistant" &&
-                    isLastAssistantMessage(index) &&
-                    showTypewriter ? (
-                      <TypewriterText
-                        text={message.content}
-                        speed={20}
-                        fastMode={fastMode}
-                        onComplete={() => setShowTypewriter(false)}
-                        className="prose prose-sm max-w-none"
-                      />
-                    ) : (
-                      <div
-                        className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{
-                          __html: formatMessage(message.content),
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="text-xs opacity-70 mt-2">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </div>
+                {message.role === "assistant" && isLastAssistantMessage(index) && showTypewriter ? (
+                  <TypewriterText
+                    text={message.content}
+                    speed={20}
+                    fastMode={fastMode}
+                    onComplete={() => setShowTypewriter(false)}
+                  />
+                ) : (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: formatMessage(message.content),
+                    }}
+                  />
+                )}
               </div>
             </div>
           ))}
@@ -157,7 +133,7 @@ export function ChatInterface({
                 <div className="flex items-center space-x-2">
                   <Bot className="h-4 w-4 text-green-600" />
                   <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
-                  <span className="text-sm text-gray-600">AgriMind is thinking...</span>
+                  <span className="text-sm text-gray-600">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -167,13 +143,13 @@ export function ChatInterface({
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t">
           <div className="flex space-x-2">
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask a follow-up question about your crop..."
+              placeholder="Ask a follow-up question..."
               disabled={isLoading}
               className="flex-1"
             />
@@ -190,9 +166,8 @@ export function ChatInterface({
               )}
             </Button>
           </div>
-          <div className="text-xs text-gray-500 mt-2">
-            You have {Math.max(0, 4 - Math.floor(messages.length / 2))} follow-up questions
-            remaining
+          <div className="text-xs text-gray-500 mt-2 text-center">
+            {Math.max(0, 4 - Math.floor(messages.length / 2))} questions remaining
           </div>
         </div>
       </div>
