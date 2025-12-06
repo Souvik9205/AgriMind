@@ -10,7 +10,7 @@ export function About() {
             alt="Farmer tending to crops"
             width={500}
             height={500}
-            className="rounded-2xl shadow-lg"
+            className="rounded-2xl shadow-lg "
           />
         </div>
         <div>
